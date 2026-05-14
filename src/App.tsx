@@ -32,21 +32,49 @@ const books: Book[] = Object.entries(bookModules)
   }))
   .sort((a, b) => a.title.localeCompare(b.title))
 
+const STORAGE_KEY = 'read-book-ids'
+
+const loadReadBookIds = () => {
+  try {
+    const storedIds = window.localStorage.getItem(STORAGE_KEY)
+    return storedIds ? (JSON.parse(storedIds) as string[]) : []
+  } catch {
+    return []
+  }
+}
+
 function App() {
   const [query, setQuery] = useState('')
-  const [selectedId, setSelectedId] = useState(books[0]?.id ?? '')
+  const [readBookIds, setReadBookIds] = useState<string[]>(loadReadBookIds)
+  const [selectedId, setSelectedId] = useState(
+    () => readBookIds.find((id) => books.some((book) => book.id === id)) ?? books[0]?.id ?? '',
+  )
+  const readBookSet = useMemo(() => new Set(readBookIds), [readBookIds])
 
   const filteredBooks = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
+    const matchingBooks = normalizedQuery
+      ? books.filter((book) => book.title.toLowerCase().includes(normalizedQuery))
+      : books
 
-    if (!normalizedQuery) {
-      return books
-    }
+    return [...matchingBooks].sort((a, b) => {
+      const readDifference =
+        Number(readBookSet.has(b.id)) - Number(readBookSet.has(a.id))
 
-    return books.filter((book) =>
-      book.title.toLowerCase().includes(normalizedQuery),
-    )
-  }, [query])
+      return readDifference || a.title.localeCompare(b.title)
+    })
+  }, [query, readBookSet])
+
+  const toggleReadBook = (bookId: string) => {
+    setReadBookIds((currentIds) => {
+      const nextIds = currentIds.includes(bookId)
+        ? currentIds.filter((id) => id !== bookId)
+        : [...currentIds, bookId]
+
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextIds))
+      return nextIds
+    })
+  }
 
   const selectedBook =
     books.find((book) => book.id === selectedId) ?? filteredBooks[0] ?? books[0]
@@ -85,22 +113,43 @@ function App() {
           <div className="book-list">
             {filteredBooks.length > 0 ? (
               filteredBooks.map((book) => (
-                <button
+                <div
                   className={
                     book.id === selectedBook?.id ? 'book-card active' : 'book-card'
                   }
                   key={book.id}
-                  type="button"
-                  onClick={() => setSelectedId(book.id)}
                 >
-                  <span className="book-cover" aria-hidden="true">
-                    PDF
-                  </span>
-                  <span>
-                    <strong>{book.title}</strong>
-                    <small>{book.fileName}</small>
-                  </span>
-                </button>
+                  <button
+                    className={
+                      readBookSet.has(book.id)
+                        ? 'read-toggle is-read'
+                        : 'read-toggle'
+                    }
+                    aria-label={
+                      readBookSet.has(book.id)
+                        ? `${book.title} o'qilgan belgini olib tashlash`
+                        : `${book.title} o'qilgan deb belgilash`
+                    }
+                    aria-pressed={readBookSet.has(book.id)}
+                    type="button"
+                    onClick={() => toggleReadBook(book.id)}
+                  >
+                    ★
+                  </button>
+                  <button
+                    className="book-select"
+                    type="button"
+                    onClick={() => setSelectedId(book.id)}
+                  >
+                    <span className="book-cover" aria-hidden="true">
+                      PDF
+                    </span>
+                    <span>
+                      <strong>{book.title}</strong>
+                      <small>{book.fileName}</small>
+                    </span>
+                  </button>
+                </div>
               ))
             ) : (
               <p className="empty-state">Bunday nomdagi kitob topilmadi.</p>

@@ -117,16 +117,15 @@
   width: 100%;
   min-height: 92px;
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
   align-items: center;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px;
   color: var(--text);
   background: var(--card);
   text-align: left;
-  cursor: pointer;
 }
 
 .book-card:hover,
@@ -137,6 +136,46 @@
 
 .book-card.active {
   background: var(--active);
+}
+
+.read-toggle {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #b7afa1;
+  background: transparent;
+  font-size: 23px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.read-toggle:hover,
+.read-toggle:focus-visible,
+.read-toggle.is-read {
+  color: #d69a18;
+  background: rgba(214, 154, 24, 0.12);
+}
+
+.read-toggle:focus-visible,
+.book-select:focus-visible {
+  outline: 3px solid var(--focus);
+}
+
+.book-select {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
 }
 
 .book-cover {
